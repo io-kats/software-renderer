@@ -3,7 +3,7 @@
 A simple real-time 3D software renderer.
 
 <p align="center">
- <img src="./images/hello_tri.PNG" width="800" alt="random examples">
+ <img src="./images/hello_tri.png" width="800" alt="hello_tri">
 </p>
 
 <p align="center">
