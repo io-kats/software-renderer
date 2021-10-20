@@ -134,7 +134,7 @@ public:
     bool FragmentShader(ers::vec4& out) override
     {        
         out = ers::vec4(m_varsInterpolated.color, 1.0f);     
-        return false;
+        return false; // return true if you want to discard a fragment.
     }  
 };
 
