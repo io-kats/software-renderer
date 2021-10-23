@@ -152,7 +152,7 @@ private:
 
 	SimpleShader m_simpleShader;
 
-	// Just a texture buffer for rendering the software renderer's render buffer.
+	// Just a convenient wrapper for a texture buffer (plus a shader program) for rendering the software renderer's color buffer.
 	GLSurface m_surface; 
 
 public:

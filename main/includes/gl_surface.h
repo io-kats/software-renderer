@@ -12,7 +12,7 @@
 #include "ers/matrix.h"
 #include "gl_shader_program.h"
 
-// Simple class for creating a surface for "realtime" software rendering
+// Simple class for creating a "surface" for real-time software rendering
 // by making use of a texture buffer.
 // Always has 4 compontents (RGBA).
 class GLSurface
