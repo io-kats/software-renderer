@@ -223,7 +223,7 @@ Controls for the scenes:
 	- Press C to toggle between FPS and FLY modes for the camera.
 	- Hold the left mouse button to change the viewing direction.
 	- Press up and down arrow keys to increase or decrease the number of parallepipeds in the parallepipeds scene.
-	- Press F to take a screenshot of the window.
+	- Press F to take a screenshot.
 	- Press V to toggle the wireframe on and off.
 	
 If you do not want to render in real-time, you can use the renderer's WriteToFile method and save the rendered scene as an image to disk.

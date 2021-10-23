@@ -49,6 +49,8 @@ class App : public Window
 private:
 	Renderer* m_renderer;
 
+	ers::String m_stringBuf;
+
 	f32 m_triangle[3][6] = 
 	{
 		{ -0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f },
@@ -95,10 +97,13 @@ private:
 
 	s32 m_whichScene;
 
+	s32 m_numOfImages;
+
 public:
 	App(const char* title_, int width_, int height_, int windowpos_x, int windowpos_y)
 		: 
 		Window(title_, width_, height_, windowpos_x, windowpos_y),
+		m_stringBuf(ers::String(1024)),
 		m_surface(width_, height_)
 	{ 
 		
@@ -311,6 +316,7 @@ public:
 		ers::init_rand();
 
 		m_whichScene = Scene::HELLO_TRIANGLE;
+		m_numOfImages = 0;
 
 		m_shadowmap = new Image(512, 512, Image::Format::GRAYSCALE, Image::Range::HDR);	
 
@@ -364,8 +370,17 @@ public:
 			m_renderer->Toggle(Renderer::WIREFRAME);
 
 		if (KeyPressed(GLFW_KEY_F))
-			m_renderer->WriteToFile(IMAGE_FILENAME);
-
+		{
+			s32 n = m_numOfImages;
+			m_stringBuf.Sprintf("image%d", n / 100); n %= 100;
+			m_stringBuf.AppendSprintf("%d", n / 10); n %= 10;
+			m_stringBuf.AppendSprintf("%d.png", n);			
+			m_renderer->WriteToFile(m_stringBuf.GetCstr());
+			++m_numOfImages;
+			if (m_numOfImages > 999)
+				m_numOfImages = 0;
+		}
+			
 		if (KeyPressed(GLFW_KEY_RIGHT))
 		{
 			++m_whichScene;
