@@ -46,7 +46,7 @@ public:
     s32 GetHeight();
     const ers::vec4* GetNdcVertices();
     
-    void ProcessTriangle(const void* in0, const void* in1, const void* in2);  
+    void RenderTriangle(const void* in0, const void* in1, const void* in2);  
     void WriteToFile(const char* filename, bool flip = true);
 
 private:

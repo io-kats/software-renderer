@@ -131,7 +131,7 @@ public:
 		v2.aColor = ers::vec3(m_triangle[2][3], m_triangle[2][4], m_triangle[2][5]);
 		
 		m_renderer->SetShaderProgram(&m_simpleShader);
-		m_renderer->ProcessTriangle(&v0, &v1, &v2);
+		m_renderer->RenderTriangle(&v0, &v1, &v2);
 	}
 
 	void CubesSceneInit()

@@ -72,7 +72,7 @@ void Mesh::Draw(Renderer* renderer) const
 		v1 = { vert1.position, vert1.normal, vert1.tex_coords };
 		v2 = { vert2.position, vert2.normal, vert2.tex_coords };
 
-        renderer->ProcessTriangle(&v0, &v1, &v2);
+        renderer->RenderTriangle(&v0, &v1, &v2);
     }
 }
 

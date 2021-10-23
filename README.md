@@ -25,7 +25,7 @@ A simple real-time 3D software renderer.
 
 
 ## Purpose
-This project with the purpose of learning the algorithms behind 3D raster graphics based on the [tiny renderer](https://github.com/ssloy/tinyrenderer "tiny-renderer") by [Dmitry V. Sokolov](https://github.com/ssloy "tiny-renderer"), as well as demystifying certain aspects of OpenGL for myself. In contrast to the tiny renderer, I chose to render the framebuffer in real time, instead of saving the frames as images on disk, which helped a lot with visual debugging. Also just plain old interest in how I'd go about writing a software renderer, because it's a cool idea for a project.
+This project with the purpose of learning the algorithms behind 3D raster graphics based on the [tiny renderer](https://github.com/ssloy/tinyrenderer "tiny-renderer") by [Dmitry V. Sokolov](https://github.com/ssloy "tiny-renderer"), as well as demystifying certain aspects of OpenGL for myself. In contrast to the tiny renderer, I chose to also use OpenGL by copying the colorbuffer's data to a texture buffer and rendering it in real-time, instead of just saving the frames as images on disk, which helped a lot with visual debugging. Also just plain old interest in how I'd go about writing a software renderer, because it's a cool idea for a project.
 
 
 ## Features
@@ -50,9 +50,9 @@ This project with the purpose of learning the algorithms behind 3D raster graphi
 
 ## Technologies
 - CMake and C++11.
-- OpenGL 3.3 (Desktop) for rendering the texture on which the software renderer works.
 - [GLFW](https://github.com/glfw/glfw "GLFW") for window creation, OpenGL context creation and input.
-- The [GLAD loader for OpenGL](https://glad.dav1d.de/ "glad") on desktop (OpenGL 3.3 Core Profile).
+- OpenGL 3.3 (Desktop) for rendering the texture on which the software renderer works (optional).
+- The [GLAD loader for OpenGL](https://glad.dav1d.de/ "glad") on desktop (OpenGL 3.3 Core Profile) (optional).
 - [stb_image](https://github.com/nothings/stb/blob/master/stb_image.h "stb_image") for loading image files.
 - [stb_image_write](https://github.com/nothings/stb/blob/master/stb_image_write.h "stb_image_write") for writing image files.
 - [My small C++ codebase](https://github.com/io-kats/ersatz "ersatz").
@@ -61,7 +61,7 @@ This project with the purpose of learning the algorithms behind 3D raster graphi
 ## Setup
 - For Windows you are going to need CMake (3.20.0-rc2 on my system) and:
 use Visual Studio Code with the [CMake Tools extention](https://marketplace.visualstudio.com/items?itemName=ms-vscode.cmake-tools&ssr=false#overview "cmake_tools") for desktop to build the project. 
-Tested with the Microsoft Visual Studio Community 2019 - Version 16.7.5 compiler.
+Tested with the Microsoft Visual Studio Community 2019 - Version 16.7.5 (x64) compiler.
 - If you'd like a a web version, install the Emscripten compiler toolchain, go to wherever you cloned the repo
 and run in the Emscripten command prompt:
 
@@ -90,7 +90,7 @@ However this has only been tested on Chrome Version 94.0.4606.81, so it might br
 Please look at the [Emscripten tutorial](https://emscripten.org/docs/getting_started/Tutorial.html "emscripten_tutorial") for more information on how the toolchain works.
 
 ## Usage
-- Use the ERS_SHADER_DEFINE_VARYINGS macro to define the names of your varyings and what fields they contain. Make sure it is made up of single precision floating point types, as that's how they will be interpreted. A sample program used for "hello triangle":
+Use the ERS_SHADER_DEFINE_VARYINGS macro to define the names of your varyings and what fields they contain. Make sure it is made up of single precision floating point types, as that's how they will be interpreted. An example program used for "hello triangle":
 
 ```
 #include "window.h"
@@ -192,7 +192,7 @@ public:
 		v2.aColor = ers::vec3(m_triangle[2][3], m_triangle[2][4], m_triangle[2][5]);
 		
 		m_renderer->SetShaderProgram(&m_simpleShader);
-		m_renderer->ProcessTriangle(&v0, &v1, &v2);
+		m_renderer->RenderTriangle(&v0, &v1, &v2);
 
 		m_surface.Draw(m_renderer->GetColorBuffer());
 	}
@@ -202,7 +202,6 @@ public:
 		delete m_renderer;
 	}
 };
-
 
 int main()
 {		
@@ -216,6 +215,8 @@ int main()
 	return 0;
 }
 ```
+
+Controls for the scenes:
 - Press the left and right arrow keys to change the scene.
 - The controls for the 3D scenes are as follows:
 	- Press WASD for movement.
@@ -225,19 +226,20 @@ int main()
 	- Press F to take a screenshot of the window.
 	- Press V to toggle the wireframe on and off.
 	
+If you do not want to render in real-time, you can use the renderer's WriteToFile method and save the rendered scene as an image to disk.
 
 For more details, please take a look at the source code. The 'guts' of this project are in "software_renderer.\*" and "shader_program.\*"
 
 
 ## Project Status
-The project is still in development. Even thought the renderer works, many features are still not implemented. It can also get pretty slow in higher resolutions.
+The project is still in development. Even thought the renderer works, many features are still not implemented. It can also get pretty slow in higher resolutions or when a lot of reading from textures is involved.
 
 
 ## Future goals
 In the following order:
 - Implement alpha blending.
 - Implement MSAA.
-- Try to get skeletal animations on screen with it (integrate assimp).
+- Try to get skeletal animations on screen (integrate assimp).
 - Parallelize rasterization using SIMD instructions and/or threads.
 - Use a tiling strategy for textures (and/or the z-buffer) to e.g. speed up texture lookups in the fragment shader.
 - Implement cubemaps.

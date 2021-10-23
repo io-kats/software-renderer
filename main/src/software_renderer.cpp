@@ -120,7 +120,7 @@ void Renderer::Clear(f32 r, f32 g, f32 b, f32 a)
     for (s32 i = 0; i < m_width * m_height; ++i) m_zBuffer[i] = FLT_MAX;
 }
 
-void Renderer::ProcessTriangle(const void* in0, const void* in1, const void* in2)
+void Renderer::RenderTriangle(const void* in0, const void* in1, const void* in2)
 {
     ERS_ASSERT(m_shader != nullptr);
     m_shader->VertexShader(in0, in1, in2, m_ndcTri[0], m_ndcTri[1], m_ndcTri[2]);
