@@ -1,6 +1,6 @@
 # Software renderer.
 
-A simple real-time 3D software renderer.
+A simple 3D software renderer.
 
 <p align="center">
  <img src="./images/hello_tri.png" width="800" alt="hello_tri">
