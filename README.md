@@ -119,15 +119,15 @@ public:
     ) override
     {
         p0 = VertexShaderPerVertex(in0, 0);
-	p1 = VertexShaderPerVertex(in1, 1);
-	p2 = VertexShaderPerVertex(in2, 2);
+		p1 = VertexShaderPerVertex(in1, 1);
+		p2 = VertexShaderPerVertex(in2, 2);
     }
 
     ers::vec4 VertexShaderPerVertex(const void* in, s32 which_vert)
     {       
         const VertexAttributes* vert = (const VertexAttributes*)in;
         m_vars[which_vert].color = vert->aColor;		
-	const ers::vec4 position = ers::vec4(vert->aPos, 1.0f);       
+		const ers::vec4 position = ers::vec4(vert->aPos, 1.0f);       
         return position;
     }
 
