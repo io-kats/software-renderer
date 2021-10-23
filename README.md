@@ -25,7 +25,7 @@ A simple 3D software renderer.
 
 
 ## Purpose
-This project with the purpose of learning the algorithms behind 3D raster graphics based on the [tiny renderer](https://github.com/ssloy/tinyrenderer "tiny-renderer") by [Dmitry V. Sokolov](https://github.com/ssloy "tiny-renderer"), as well as demystifying certain aspects of OpenGL for myself. In contrast to the tiny renderer, I chose to also use OpenGL by copying the colorbuffer's data to a texture buffer and rendering it in real-time, instead of just saving the frames as images on disk, which helped a lot with visual debugging. Also just plain old interest in how I'd go about writing a software renderer, because it's a cool idea for a project.
+This project with the purpose of learning the algorithms behind 3D raster graphics based on the [tiny renderer](https://github.com/ssloy/tinyrenderer "tiny-renderer") by [Dmitry V. Sokolov](https://github.com/ssloy "tiny-renderer"), as well as demystifying certain aspects of OpenGL for myself. In contrast to the tiny renderer, I chose to also use OpenGL by copying the colorbuffer's data to a texture and rendering it in real-time, instead of just saving the frames as images on disk, which helped a lot with visual debugging. Also just plain old interest in how I'd go about writing a software renderer, because it's a cool idea for a project.
 
 
 ## Features
@@ -152,7 +152,7 @@ private:
 
 	SimpleShader m_simpleShader;
 
-	// Just a convenient wrapper for a texture buffer (plus a shader program) for rendering the software renderer's color buffer.
+	// Just a convenient wrapper for a texture (plus a shader program) for rendering the software renderer's color buffer.
 	GLSurface m_surface; 
 
 public:
