@@ -37,7 +37,6 @@
 #include "blinn_phong_shader.h"
 #include "shadowmap_shader.h"
 
-#define IMAGE_FILENAME "./test_image.png"
 #define RESOURCES "./resources/"
 
 #define RAND_F32 (f32)ers::random_frac()
@@ -60,8 +59,9 @@ private:
 
 	Mesh m_quadMesh; 
 	Mesh m_cubeMesh; 
+	Mesh m_monkeyMesh; 
 
-	Image* m_infoDiffuse;	
+	Image* m_diffuse;	
 	Image* m_shadowmap;
 
 	SimpleShader m_simpleShader;
@@ -82,7 +82,7 @@ private:
 	};
 
 	MeshInstance m_lightCube;
-	MeshInstance m_textureCube;
+	MeshInstance m_textureMesh;
 	MeshInstance m_floorInstance;
 
 	ers::Vector<MeshInstance> m_cubes;
@@ -199,19 +199,20 @@ public:
 		m_debugLightShader.uniform_color = m_lightCube.color;
 		m_debugLightShader.uniform_light_pos = light_pos;
 		m_renderer->SetShaderProgram(&m_debugLightShader);
-		m_cubeMesh.Draw(m_renderer);
+		m_lightCube.mesh->Draw(m_renderer);
 	}
 
 	void TextureSceneInit()
 	{
-		m_infoDiffuse  = new Image(RESOURCES"info.jpg");	 
+		m_diffuse  = new Image(RESOURCES"test.png");	 
+		load_object_file(RESOURCES"monkey.obj", m_monkeyMesh);
 
-		m_textureCube.mesh = &m_cubeMesh;
-		m_textureCube.color = ers::vec3(1.0f);
-		m_textureCube.transform.Reset();
-		m_textureCube.transform.Translate(ers::vec3(0.0f, 0.0f, -4.0f));
-		m_textureCube.transform.Scale(ers::vec3(1.5f));
-		m_textureCube.transform.Rotate(ers::radians(-90.0f), ers::vec3(0.0f, 1.0f, 0.0f));
+		m_textureMesh.mesh = &m_monkeyMesh;
+		m_textureMesh.color = ers::vec3(1.0f);
+		m_textureMesh.transform.Reset();
+		m_textureMesh.transform.Translate(ers::vec3(0.0f, 0.0f, -4.0f));
+		m_textureMesh.transform.Scale(ers::vec3(1.5f));
+		m_textureMesh.transform.Rotate(ers::radians(-90.0f), ers::vec3(0.0f, 1.0f, 0.0f));
 
 		m_floorInstance.mesh = &m_quadMesh;
 		m_floorInstance.color = ers::vec3(0.2f, 0.2f, 0.3f);
@@ -226,12 +227,12 @@ public:
 		const f32 current_time = (f32)GetCurrentFrameTime();
 		const f32 dt = (f32)GetDeltaTime();
 
-		const ers::vec3 pos_texture_cube = m_textureCube.transform.GetTranslation();
-		m_textureCube.transform.Rotate(dt * ers::radians(30.0f), ers::vec3(1.0f, 0.0f, 0.0f));
-		m_textureCube.transform.Rotate(dt * ers::radians(30.0f), ers::vec3(0.0f, 1.0f, 0.0f));
-		const ers::mat4 tr_texture_cube = m_textureCube.transform.GetModelMatrix();
+		const ers::vec3 pos_texture_cube = m_textureMesh.transform.GetTranslation();
+		m_textureMesh.transform.Rotate(dt * ers::radians(30.0f), ers::vec3(0.0f, 1.0f, 0.0f));
+		const ers::mat4 tr_texture_cube = m_textureMesh.transform.GetModelMatrix();
 
-		const ers::vec3 light_pos = ers::vec3(2.0f * cosf(current_time * 0.5f), 4.0f, 2.0f * sinf(current_time * 0.5f) - 4.0f);
+		const ers::vec3 light_pos = m_textureMesh.transform.GetTranslation() 
+			+ ers::vec3(2.0f * cosf(current_time * 0.5f), ers::sin_norm(current_time * 0.5f, 1.0f, 5.0f, 6.0f), 2.0f * sinf(current_time * 0.5f));
 		const f32 zFar = 20.0f;
 		const ers::mat4 light_proj = ers::ortho(-10.0f, 10.0f, -10.0f, 10.0f, 0.01f, zFar);
 		const ers::mat4 light_view = ers::lookAt(light_pos, pos_texture_cube + ers::vec3(0.0f, 0.0f, -1.0f), ers::vec3(0.0f, 1.0f, 0.0f));
@@ -245,11 +246,11 @@ public:
 		m_shadowmapShader.uniform_zFar = zFar;
 		m_shadowmapShader.uniform_model = tr_texture_cube;
 		m_renderer->SetShaderProgram(&m_shadowmapShader);
-		m_cubeMesh.Draw(m_renderer);
+		m_textureMesh.mesh->Draw(m_renderer);
 
 		const ers::mat4 tr_floor = m_floorInstance.transform.GetModelMatrix();	
 		m_shadowmapShader.uniform_model = tr_floor;
-		m_quadMesh.Draw(m_renderer);
+		m_floorInstance.mesh->Draw(m_renderer);
 
 		// Copy z_buffer to shadowmap.
 		void* p_to = m_shadowmap->GetData();
@@ -271,7 +272,7 @@ public:
 		const ers::mat4 view = m_playerCamera->GetViewMatrix();
 		const ers::mat4 vp = proj * view;
 
-		m_blinnPhongShader.sampler2d_diffuse_map = m_infoDiffuse;
+		m_blinnPhongShader.sampler2d_diffuse_map = m_diffuse;
 		m_blinnPhongShader.sampler2d_normal_map = nullptr;
 		m_blinnPhongShader.sampler2d_specular_map = nullptr;	
 		m_blinnPhongShader.sampler2d_shadow_map = m_shadowmap;	
@@ -280,9 +281,10 @@ public:
 		m_blinnPhongShader.uniform_mvp_mat = vp * tr_texture_cube; 	
 		m_blinnPhongShader.uniform_model = tr_texture_cube;
 		m_blinnPhongShader.uniform_model_it = ers::mat3(ers::transpose(ers::inverse(tr_texture_cube)));
+		m_blinnPhongShader.uniform_color = ers::vec3(0.1f, 0.5f, 0.2f);
 
 		m_renderer->SetShaderProgram(&m_blinnPhongShader);
-		m_cubeMesh.Draw(m_renderer);
+		m_textureMesh.mesh->Draw(m_renderer);
 
 		m_blinnPhongShader.uniform_do_specific_color = true;
 		m_blinnPhongShader.uniform_color = m_floorInstance.color;
@@ -293,7 +295,7 @@ public:
 		m_blinnPhongShader.sampler2d_normal_map = nullptr;
 		m_blinnPhongShader.sampler2d_specular_map = nullptr;	
 		m_blinnPhongShader.sampler2d_shadow_map = m_shadowmap;	
-		m_quadMesh.Draw(m_renderer);
+		m_floorInstance.mesh->Draw(m_renderer);
 
 		m_lightCube.transform.SetTranslation(light_pos);
 		ers::mat4 tr_cube = m_lightCube.transform.GetModelMatrix();	
@@ -303,12 +305,12 @@ public:
 		m_debugLightShader.uniform_color = m_lightCube.color;
 		m_debugLightShader.uniform_light_pos = light_pos;
 		m_renderer->SetShaderProgram(&m_debugLightShader);
-		m_cubeMesh.Draw(m_renderer);
+		m_lightCube.mesh->Draw(m_renderer);
 	}
 
 	void TextureSceneCleanup()
 	{
-		delete m_infoDiffuse; 
+		delete m_diffuse; 
 	}
 
 	void Init() override

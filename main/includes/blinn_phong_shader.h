@@ -111,13 +111,12 @@ public:
         {
             diffuse_sample = m_randomColor;
         }
-        else if (uniform_do_specific_color)
+        else if (uniform_do_specific_color || sampler2d_diffuse_map == nullptr)
         {
             diffuse_sample = uniform_color;
         }
         else
         {
-            ERS_ASSERT(sampler2d_diffuse_map != nullptr);
             sampler2d_diffuse_map->Get(m_varsInterpolated.texcoord.x(), m_varsInterpolated.texcoord.y(), diffuse_sample);
         }
         return diffuse_sample;
