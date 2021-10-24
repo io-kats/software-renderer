@@ -61,7 +61,8 @@ private:
 	Mesh m_cubeMesh; 
 	Mesh m_monkeyMesh; 
 
-	Image* m_diffuse;	
+	Image* m_modelDiffuse;	
+	Image* m_floorDiffuse;	
 	Image* m_shadowmap;
 
 	SimpleShader m_simpleShader;
@@ -202,9 +203,38 @@ public:
 		m_lightCube.mesh->Draw(m_renderer);
 	}
 
+	void MakeFloorDiffuseTexture()
+	{
+		m_floorDiffuse  = new Image(512, 512, Image::Format::RGB, Image::Range::LDR);
+		const s32 w = m_floorDiffuse->GetWidth();
+		const s32 h = m_floorDiffuse->GetHeight();
+		const s32 step = w / 4;		
+		const f32 half_step = 0.5f * (f32)step;
+		const f32 half_dim = 0.5f * (f32)w;
+		for (s32 y = 0; y < h; y += step)
+		{
+			for (s32 x = 0; x < w; x += step)
+			{
+				const ers::vec3 col = RAND_V3F32;
+				for (s32 yy = 0; yy < step; ++yy)
+				{
+					const s32 b = y + yy;
+					for (s32 xx = 0; xx < step; ++xx)
+					{
+						const s32 a = x + xx;					
+						const f32 t = ((f32)a - half_dim) * ((f32)a - half_dim) + ((f32)b - half_dim) * ((f32)b - half_dim);
+						const f32 m = ers::saw(t / (w * w), 0.3f, 1.0f, 0.1f, 0.5f);
+						m_floorDiffuse->Set(a, b, m * col);
+					}
+				}
+			}
+		}
+	}
+
 	void TextureSceneInit()
 	{
-		m_diffuse  = new Image(RESOURCES"test.png");	 
+		m_modelDiffuse  = new Image(RESOURCES"test.png");	 
+		MakeFloorDiffuseTexture();
 		load_object_file(RESOURCES"monkey.obj", m_monkeyMesh);
 
 		m_textureMesh.mesh = &m_monkeyMesh;
@@ -272,7 +302,7 @@ public:
 		const ers::mat4 view = m_playerCamera->GetViewMatrix();
 		const ers::mat4 vp = proj * view;
 
-		m_blinnPhongShader.sampler2d_diffuse_map = m_diffuse;
+		m_blinnPhongShader.sampler2d_diffuse_map = m_modelDiffuse;
 		m_blinnPhongShader.sampler2d_normal_map = nullptr;
 		m_blinnPhongShader.sampler2d_specular_map = nullptr;	
 		m_blinnPhongShader.sampler2d_shadow_map = m_shadowmap;	
@@ -286,12 +316,12 @@ public:
 		m_renderer->SetShaderProgram(&m_blinnPhongShader);
 		m_textureMesh.mesh->Draw(m_renderer);
 
-		m_blinnPhongShader.uniform_do_specific_color = true;
+		m_blinnPhongShader.uniform_do_specific_color = false;
 		m_blinnPhongShader.uniform_color = m_floorInstance.color;
 		m_blinnPhongShader.uniform_model = tr_floor;
 		m_blinnPhongShader.uniform_model_it = ers::mat3(ers::transpose(ers::inverse(tr_floor)));
 		m_blinnPhongShader.uniform_mvp_mat = vp * tr_floor; 
-		m_blinnPhongShader.sampler2d_diffuse_map = nullptr;
+		m_blinnPhongShader.sampler2d_diffuse_map = m_floorDiffuse;
 		m_blinnPhongShader.sampler2d_normal_map = nullptr;
 		m_blinnPhongShader.sampler2d_specular_map = nullptr;	
 		m_blinnPhongShader.sampler2d_shadow_map = m_shadowmap;	
@@ -310,7 +340,8 @@ public:
 
 	void TextureSceneCleanup()
 	{
-		delete m_diffuse; 
+		delete m_modelDiffuse; 
+		delete m_floorDiffuse; 
 	}
 
 	void Init() override
