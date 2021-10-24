@@ -11,7 +11,7 @@ A simple 3D software renderer.
 </p>
 
 <p align="center">
- <img src="./images/textured_cube.png" width="800" alt="textured_cube">
+ <img src="./images/textures.png" width="800" alt="textures">
 </p>
 
 ## Table of contents

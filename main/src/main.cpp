@@ -62,7 +62,12 @@ private:
 	Mesh m_monkeyMesh; 
 
 	Image* m_modelDiffuse;	
+
 	Image* m_floorDiffuse;	
+	Image* m_floorSpecular;	
+	Image* m_floorNormal;	
+	Image* m_floorHeight;	
+
 	Image* m_shadowmap;
 
 	SimpleShader m_simpleShader;
@@ -205,28 +210,61 @@ public:
 
 	void MakeFloorDiffuseTexture()
 	{
-		m_floorDiffuse  = new Image(512, 512, Image::Format::RGB, Image::Range::LDR);
-		const s32 w = m_floorDiffuse->GetWidth();
-		const s32 h = m_floorDiffuse->GetHeight();
-		const s32 step = w / 4;		
+		const s32 dim = 512;
+		const s32 step = dim / 8;		
+
+		m_floorDiffuse  = new Image(dim, dim, Image::Format::RGB, Image::Range::LDR);			
+		m_floorSpecular  = new Image(dim, dim, Image::Format::GRAYSCALE, Image::Range::LDR);	
+		m_floorNormal  = new Image(dim, dim, Image::Format::RGB, Image::Range::LDR);	
+		m_floorHeight  = new Image(dim, dim, Image::Format::GRAYSCALE, Image::Range::HDR);	
+
 		const f32 half_step = 0.5f * (f32)step;
-		const f32 half_dim = 0.5f * (f32)w;
-		for (s32 y = 0; y < h; y += step)
+		const f32 half_dim = 0.5f * (f32)dim;
+		const f32 inv_dim2 = 1.0f / (f32)(dim * dim);
+		const f32 inv_dim = 1.0f / (f32)dim;
+		for (s32 y = 0; y < dim; y += step)
 		{
-			for (s32 x = 0; x < w; x += step)
+			for (s32 x = 0; x < dim; x += step)
 			{
 				const ers::vec3 col = RAND_V3F32;
-				for (s32 yy = 0; yy < step; ++yy)
+				for (s32 yy = y; yy < y + step; ++yy)
 				{
-					const s32 b = y + yy;
-					for (s32 xx = 0; xx < step; ++xx)
-					{
-						const s32 a = x + xx;					
-						const f32 t = ((f32)a - half_dim) * ((f32)a - half_dim) + ((f32)b - half_dim) * ((f32)b - half_dim);
-						const f32 m = ers::saw(t / (w * w), 0.3f, 1.0f, 0.1f, 0.5f);
-						m_floorDiffuse->Set(a, b, m * col);
+					const f32 ry2 = ((f32)yy - half_dim) * ((f32)yy - half_dim);
+					for (s32 xx = x; xx < x + step; ++xx)
+					{				
+						const f32 r2 = ((f32)xx - half_dim) * ((f32)xx - half_dim) + ry2;
+						//const f32 m = ers::saw(r2 * inv_dim2, 0.3f, 1.0f, 0.1f, 0.5f);
+						const f32 m = ers::sin_norm(r2 * inv_dim2, 0.3f, 1.0f, 0.1f);
+						m_floorDiffuse->Set(xx, yy, m * col);
+						m_floorHeight->Set(xx, yy, m);
+						m_floorSpecular->Set(xx, yy, sqrtf(m));
 					}
 				}
+			}
+		}
+
+		
+		for (s32 y = 0; y < dim; ++y)
+		{
+			const f32 t = (f32)y * inv_dim;
+			const f32 t0 = (f32)(y - 1) * inv_dim;
+			const f32 t1 = (f32)(y + 1) * inv_dim;
+			for (s32 x = 0; x < dim; ++x)
+			{
+				const f32 s = (f32)x * inv_dim;
+				const f32 s0 = (f32)(x - 1) * inv_dim;
+				const f32 s1 = (f32)(x + 1) * inv_dim;
+
+
+				ers::vec3 m00(s0, t0, 0.0f); m_floorHeight->Get(s0, t0, m00.e[2]);
+				ers::vec3 m01(s1, t1, 0.0f); m_floorHeight->Get(s1, t1, m01.e[2]);
+				ers::vec3 m10(s0, t1, 0.0f); m_floorHeight->Get(s0, t1, m10.e[2]);
+				ers::vec3 m11(s1, t0, 0.0f); m_floorHeight->Get(s1, t0, m11.e[2]);
+
+				ers::vec3 m0 = m01 - m00;
+				ers::vec3 m1 = m11 - m10;
+				ers::vec3 result = ers::normalize(ers::cross(m1, m0));
+				m_floorNormal->Set(x, y, result * 0.5f + ers::vec3(0.5f));
 			}
 		}
 	}
@@ -322,8 +360,8 @@ public:
 		m_blinnPhongShader.uniform_model_it = ers::mat3(ers::transpose(ers::inverse(tr_floor)));
 		m_blinnPhongShader.uniform_mvp_mat = vp * tr_floor; 
 		m_blinnPhongShader.sampler2d_diffuse_map = m_floorDiffuse;
-		m_blinnPhongShader.sampler2d_normal_map = nullptr;
-		m_blinnPhongShader.sampler2d_specular_map = nullptr;	
+		m_blinnPhongShader.sampler2d_normal_map = m_floorNormal;
+		m_blinnPhongShader.sampler2d_specular_map = m_floorSpecular;	
 		m_blinnPhongShader.sampler2d_shadow_map = m_shadowmap;	
 		m_floorInstance.mesh->Draw(m_renderer);
 
@@ -342,6 +380,9 @@ public:
 	{
 		delete m_modelDiffuse; 
 		delete m_floorDiffuse; 
+		delete m_floorSpecular; 
+		delete m_floorNormal; 
+		delete m_floorHeight; 
 	}
 
 	void Init() override

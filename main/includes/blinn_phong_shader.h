@@ -71,7 +71,7 @@ public:
         const ers::vec3 n = ers::normalize(m_varsInterpolated.normal);
 
         ers::vec3 normal;
-        if (sampler2d_normal_map == nullptr || uniform_do_random_color || uniform_do_specific_color) 
+        if (sampler2d_normal_map == nullptr) 
         {
             normal = n;
         }
