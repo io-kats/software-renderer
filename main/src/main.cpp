@@ -65,8 +65,7 @@ private:
 
 	Image* m_floorDiffuse;	
 	Image* m_floorSpecular;	
-	Image* m_floorNormal;	
-	Image* m_floorHeight;	
+	Image* m_floorNormal;		
 
 	Image* m_shadowmap;
 
@@ -208,15 +207,16 @@ public:
 		m_lightCube.mesh->Draw(m_renderer);
 	}
 
-	void MakeFloorDiffuseTexture()
+	void MakeFloorTextures()
 	{
 		const s32 dim = 512;
 		const s32 step = dim / 8;		
 
 		m_floorDiffuse  = new Image(dim, dim, Image::Format::RGB, Image::Range::LDR);			
 		m_floorSpecular  = new Image(dim, dim, Image::Format::GRAYSCALE, Image::Range::LDR);	
-		m_floorNormal  = new Image(dim, dim, Image::Format::RGB, Image::Range::LDR);	
-		m_floorHeight  = new Image(dim, dim, Image::Format::GRAYSCALE, Image::Range::HDR);	
+		m_floorNormal  = new Image(dim, dim, Image::Format::RGB, Image::Range::LDR);
+
+		Image* height_map = new Image(dim, dim, Image::Format::GRAYSCALE, Image::Range::HDR);	
 
 		const f32 half_step = 0.5f * (f32)step;
 		const f32 half_dim = 0.5f * (f32)dim;
@@ -226,40 +226,35 @@ public:
 		{
 			for (s32 x = 0; x < dim; x += step)
 			{
-				const ers::vec3 col = RAND_V3F32;
+				const ers::vec3 color = RAND_V3F32;
 				for (s32 yy = y; yy < y + step; ++yy)
 				{
 					const f32 ry2 = ((f32)yy - half_dim) * ((f32)yy - half_dim);
 					for (s32 xx = x; xx < x + step; ++xx)
 					{				
 						const f32 r2 = ((f32)xx - half_dim) * ((f32)xx - half_dim) + ry2;
-						//const f32 m = ers::saw(r2 * inv_dim2, 0.3f, 1.0f, 0.1f, 0.5f);
 						const f32 m = ers::sin_norm(r2 * inv_dim2, 0.3f, 1.0f, 0.1f);
-						m_floorDiffuse->Set(xx, yy, m * col);
-						m_floorHeight->Set(xx, yy, m);
+						m_floorDiffuse->Set(xx, yy, m * color);						
 						m_floorSpecular->Set(xx, yy, sqrtf(m));
+						height_map->Set(xx, yy, m);
 					}
 				}
 			}
 		}
-
 		
 		for (s32 y = 0; y < dim; ++y)
 		{
-			const f32 t = (f32)y * inv_dim;
 			const f32 t0 = (f32)(y - 1) * inv_dim;
 			const f32 t1 = (f32)(y + 1) * inv_dim;
 			for (s32 x = 0; x < dim; ++x)
 			{
-				const f32 s = (f32)x * inv_dim;
 				const f32 s0 = (f32)(x - 1) * inv_dim;
 				const f32 s1 = (f32)(x + 1) * inv_dim;
 
-
-				ers::vec3 m00(s0, t0, 0.0f); m_floorHeight->Get(s0, t0, m00.e[2]);
-				ers::vec3 m01(s1, t1, 0.0f); m_floorHeight->Get(s1, t1, m01.e[2]);
-				ers::vec3 m10(s0, t1, 0.0f); m_floorHeight->Get(s0, t1, m10.e[2]);
-				ers::vec3 m11(s1, t0, 0.0f); m_floorHeight->Get(s1, t0, m11.e[2]);
+				ers::vec3 m00(s0, t0, 0.0f); height_map->Get(s0, t0, m00.e[2]);
+				ers::vec3 m01(s1, t1, 0.0f); height_map->Get(s1, t1, m01.e[2]);
+				ers::vec3 m10(s0, t1, 0.0f); height_map->Get(s0, t1, m10.e[2]);
+				ers::vec3 m11(s1, t0, 0.0f); height_map->Get(s1, t0, m11.e[2]);
 
 				ers::vec3 m0 = m01 - m00;
 				ers::vec3 m1 = m11 - m10;
@@ -267,14 +262,14 @@ public:
 				m_floorNormal->Set(x, y, result * 0.5f + ers::vec3(0.5f));
 			}
 		}
+
+		delete height_map;
 	}
 
 	void TextureSceneInit()
 	{
-		m_modelDiffuse  = new Image(RESOURCES"test.png");	 
-		MakeFloorDiffuseTexture();
+		m_modelDiffuse  = new Image(RESOURCES"test.png");	 		
 		load_object_file(RESOURCES"monkey.obj", m_monkeyMesh);
-
 		m_textureMesh.mesh = &m_monkeyMesh;
 		m_textureMesh.color = ers::vec3(1.0f);
 		m_textureMesh.transform.Reset();
@@ -282,6 +277,7 @@ public:
 		m_textureMesh.transform.Scale(ers::vec3(1.5f));
 		m_textureMesh.transform.Rotate(ers::radians(-90.0f), ers::vec3(0.0f, 1.0f, 0.0f));
 
+		MakeFloorTextures();
 		m_floorInstance.mesh = &m_quadMesh;
 		m_floorInstance.color = ers::vec3(0.2f, 0.2f, 0.3f);
 		m_floorInstance.transform.Reset();
@@ -382,7 +378,6 @@ public:
 		delete m_floorDiffuse; 
 		delete m_floorSpecular; 
 		delete m_floorNormal; 
-		delete m_floorHeight; 
 	}
 
 	void Init() override
