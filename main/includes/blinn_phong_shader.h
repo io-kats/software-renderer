@@ -182,22 +182,6 @@ public:
         else 
             final_color = diffuse_color * (amb_val + (1.0f - shadow_val) * diff_val) + ers::vec3((1.0f - shadow_val) * light_specular_intensity * spec_val);
 
-        // f32 intensity = 0.6f * diff_val + 0.4f * spec_val;
-        // if (intensity > 0.9f) 
-        // {
-        //     intensity = 1.1f;
-        // }
-        // else if (intensity > 0.5f) 
-        // {
-        //     intensity = 0.7f;
-        // }
-        // else 
-        // {
-        //     intensity = 0.5f;
-        // }
-
-        // final_color = diffuse_color * (amb_val + (1.0f - shadow_val) * intensity);
-
         out = ers::vec4(final_color, 1.0f);     
         return false;
     }  

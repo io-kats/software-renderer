@@ -16,6 +16,7 @@ public:
     ers::vec3 uniform_color;
     ers::vec3 uniform_light_pos;
     f32 uniform_scale;
+    bool uniform_wireframe;
 
     void VertexShader(
         const void* in0, const void* in1, const void* in2,
@@ -40,8 +41,15 @@ public:
     {        
         const Varyings& vars = m_varsInterpolated; 	
         const f32 dist = ers::length(vars.fragpos - uniform_light_pos);
-        const f32 t = 1.0f - ers::smoothstep(uniform_scale * 0.6f, uniform_scale * 0.90f, dist);
-        out = ers::vec4(t * uniform_color, 1.0f);     
+        f32 t = 1.0f - ers::smoothstep(uniform_scale * 0.6f, uniform_scale * 0.90f, dist);
+
+        f32 s = 0.0f;
+        if (uniform_wireframe && (m_bar.x() < 0.1f || m_bar.y() < 0.1f || m_bar.z() < 0.1f))
+        {
+            t = 0.0f;
+            s = 1.0f;
+        }
+        out = ers::vec4(t * uniform_color + s * (1.0f - t) * (ers::vec3(1.0f) - uniform_color), 1.0f);     
         return false;
     }  
 };

@@ -60,6 +60,7 @@ private:
 	Mesh m_quadMesh; 
 	Mesh m_cubeMesh; 
 	Mesh m_monkeyMesh; 
+	Mesh m_arrowMesh; 
 
 	Image* m_modelDiffuse;	
 
@@ -87,7 +88,8 @@ private:
 	};
 
 	MeshInstance m_lightCube;
-	MeshInstance m_textureMesh;
+	MeshInstance m_arrowInstance;
+	MeshInstance m_monkeyInstance;
 	MeshInstance m_floorInstance;
 
 	ers::Vector<MeshInstance> m_cubes;
@@ -198,6 +200,7 @@ public:
 
 		m_lightCube.transform.SetTranslation(light_pos);
 		ers::mat4 tr_cube = m_lightCube.transform.GetModelMatrix();	
+		m_debugLightShader.uniform_wireframe = false;
 		m_debugLightShader.uniform_scale = m_lightCube.transform.GetScaleX() * ers::sin_norm(current_time, 0.8f, 1.0f, 2.0f);
 		m_debugLightShader.uniform_mvp_mat = vp * tr_cube;
 		m_debugLightShader.uniform_model = tr_cube;
@@ -268,14 +271,20 @@ public:
 
 	void TextureSceneInit()
 	{
+		load_object_file(RESOURCES"arrow.obj", m_arrowMesh);
+		m_arrowInstance.mesh = &m_arrowMesh;
+		m_arrowInstance.color = ers::vec3(0.4f);
+		m_arrowInstance.transform.Reset();
+		m_arrowInstance.transform.Scale(ers::vec3(0.05f));
+
 		m_modelDiffuse  = new Image(RESOURCES"test.png");	 		
 		load_object_file(RESOURCES"monkey.obj", m_monkeyMesh);
-		m_textureMesh.mesh = &m_monkeyMesh;
-		m_textureMesh.color = ers::vec3(1.0f);
-		m_textureMesh.transform.Reset();
-		m_textureMesh.transform.Translate(ers::vec3(0.0f, 0.0f, -4.0f));
-		m_textureMesh.transform.Scale(ers::vec3(1.5f));
-		m_textureMesh.transform.Rotate(ers::radians(-90.0f), ers::vec3(0.0f, 1.0f, 0.0f));
+		m_monkeyInstance.mesh = &m_monkeyMesh;
+		m_monkeyInstance.color = ers::vec3(1.0f);
+		m_monkeyInstance.transform.Reset();
+		m_monkeyInstance.transform.Translate(ers::vec3(0.0f, 0.0f, -4.0f));
+		m_monkeyInstance.transform.Scale(ers::vec3(1.5f));
+		m_monkeyInstance.transform.Rotate(ers::radians(-90.0f), ers::vec3(0.0f, 1.0f, 0.0f));
 
 		MakeFloorTextures();
 		m_floorInstance.mesh = &m_quadMesh;
@@ -283,7 +292,7 @@ public:
 		m_floorInstance.transform.Reset();
 		m_floorInstance.transform.Translate(ers::vec3(0.0f, -1.5f, -4.0f));
 		m_floorInstance.transform.Scale(ers::vec3(10.0f));
-		m_floorInstance.transform.Rotate(ers::radians(-90.0f), ers::vec3(1.0f, 0.0f, 0.0f));
+		m_floorInstance.transform.Rotate(ers::radians(-90.0f), ers::vec3(1.0f, 0.0f, 0.0f));		
 	}
 
 	void TextureSceneUpdateAndDraw()
@@ -291,12 +300,12 @@ public:
 		const f32 current_time = (f32)GetCurrentFrameTime();
 		const f32 dt = (f32)GetDeltaTime();
 
-		const ers::vec3 pos_texture_cube = m_textureMesh.transform.GetTranslation();
-		m_textureMesh.transform.Rotate(dt * ers::radians(30.0f), ers::vec3(0.0f, 1.0f, 0.0f));
-		const ers::mat4 tr_texture_cube = m_textureMesh.transform.GetModelMatrix();
+		const ers::vec3 pos_texture_cube = m_monkeyInstance.transform.GetTranslation();
+		m_monkeyInstance.transform.Rotate(dt * ers::radians(30.0f), ers::vec3(0.0f, 1.0f, 0.0f));
+		const ers::mat4 tr_texture_cube = m_monkeyInstance.transform.GetModelMatrix();
 
-		const ers::vec3 light_pos = m_textureMesh.transform.GetTranslation() 
-			+ ers::vec3(2.0f * cosf(current_time * 0.5f), ers::sin_norm(current_time * 0.5f, 1.0f, 5.0f, 6.0f), 2.0f * sinf(current_time * 0.5f));
+		const ers::vec3 light_pos = m_monkeyInstance.transform.GetTranslation() 
+			+ ers::vec3(4.0f * cosf(current_time * 0.5f), ers::sin_norm(current_time * 0.5f, 1.0f, 5.0f, 6.0f), 4.0f * sinf(current_time * 0.5f));
 		const f32 zFar = 20.0f;
 		const ers::mat4 light_proj = ers::ortho(-10.0f, 10.0f, -10.0f, 10.0f, 0.01f, zFar);
 		const ers::mat4 light_view = ers::lookAt(light_pos, pos_texture_cube + ers::vec3(0.0f, 0.0f, -1.0f), ers::vec3(0.0f, 1.0f, 0.0f));
@@ -310,7 +319,7 @@ public:
 		m_shadowmapShader.uniform_zFar = zFar;
 		m_shadowmapShader.uniform_model = tr_texture_cube;
 		m_renderer->SetShaderProgram(&m_shadowmapShader);
-		m_textureMesh.mesh->Draw(m_renderer);
+		m_monkeyInstance.mesh->Draw(m_renderer);
 
 		const ers::mat4 tr_floor = m_floorInstance.transform.GetModelMatrix();	
 		m_shadowmapShader.uniform_model = tr_floor;
@@ -348,7 +357,7 @@ public:
 		m_blinnPhongShader.uniform_color = ers::vec3(0.1f, 0.5f, 0.2f);
 
 		m_renderer->SetShaderProgram(&m_blinnPhongShader);
-		m_textureMesh.mesh->Draw(m_renderer);
+		m_monkeyInstance.mesh->Draw(m_renderer);
 
 		m_blinnPhongShader.uniform_do_specific_color = false;
 		m_blinnPhongShader.uniform_color = m_floorInstance.color;
@@ -361,15 +370,17 @@ public:
 		m_blinnPhongShader.sampler2d_shadow_map = m_shadowmap;	
 		m_floorInstance.mesh->Draw(m_renderer);
 
-		m_lightCube.transform.SetTranslation(light_pos);
-		ers::mat4 tr_cube = m_lightCube.transform.GetModelMatrix();	
-		m_debugLightShader.uniform_scale = m_lightCube.transform.GetScaleX();
+		m_arrowInstance.transform.SetTranslation(light_pos);
+		m_arrowInstance.transform.SetRotation(acosf(m_blinnPhongShader.uniform_light_dir.y()), ers::cross(ers::vec3(0.0f, 1.0f, 0.0f), m_blinnPhongShader.uniform_light_dir));
+		ers::mat4 tr_cube = m_arrowInstance.transform.GetModelMatrix();	
+		m_debugLightShader.uniform_scale = 0.7f;
+		m_debugLightShader.uniform_wireframe = true;
 		m_debugLightShader.uniform_mvp_mat = vp * tr_cube;
 		m_debugLightShader.uniform_model = tr_cube;
-		m_debugLightShader.uniform_color = m_lightCube.color;
+		m_debugLightShader.uniform_color = m_arrowInstance.color;
 		m_debugLightShader.uniform_light_pos = light_pos;
 		m_renderer->SetShaderProgram(&m_debugLightShader);
-		m_lightCube.mesh->Draw(m_renderer);
+		m_arrowInstance.mesh->Draw(m_renderer);
 	}
 
 	void TextureSceneCleanup()
