@@ -45,6 +45,9 @@ public:
     bool uniform_do_random_color;
     bool uniform_do_specific_color;
     bool uniform_do_point_light;
+
+    s32 uniform_pcf_dims;
+
     const f32 shadow_bias = 0.05f;
 
     f32 calculate_shadow_value(const ers::vec4& lightspace_fragpos)
@@ -56,12 +59,30 @@ public:
             shadow_ndc.x() = 0.5f * shadow_ndc.x() + 0.5f;
             shadow_ndc.y() = 0.5f * shadow_ndc.y() + 0.5f;
 
-            f32 dist;
-            sampler2d_shadow_map->Get(shadow_ndc.x(), shadow_ndc.y(), dist);
-
-            const f32 closest_depth = dist;
-            const f32 current_depth = shadow_ndc.z();
-            shadow_value = (current_depth - shadow_bias > closest_depth) ? 1.0f : 0.0f;
+            const s32 dim = 1;
+            if (uniform_pcf_dims == 1)
+            {
+                f32 closest_depth;
+                sampler2d_shadow_map->Get(shadow_ndc.x(), shadow_ndc.y(), closest_depth);
+                f32 current_depth = 0.5f * shadow_ndc.z() + 0.5f;
+                shadow_value = (current_depth - shadow_bias > closest_depth) ? 1.0f : 0.0f;
+            }
+            else // (slow) PCF
+            {
+                const s32 half_dim = uniform_pcf_dims / 2;
+                const ers::vec2 texel_size(1.0f / sampler2d_shadow_map->GetWidth(), 1.0f / sampler2d_shadow_map->GetHeight());
+                for (s32 j = -half_dim; j <= half_dim; ++j)
+                {
+                    for (s32 i = -half_dim; i <= half_dim; ++i)
+                    {
+                        f32 closest_depth;
+                        sampler2d_shadow_map->Get(shadow_ndc.x() + texel_size.x() * (f32)i, shadow_ndc.y() + texel_size.y() * (f32)j, closest_depth);
+                        f32 current_depth = 0.5f * shadow_ndc.z() + 0.5f;
+                        shadow_value += (current_depth - shadow_bias > closest_depth) ? 1.0f : 0.0f;
+                    }
+                }
+                shadow_value /= (f32)(uniform_pcf_dims * uniform_pcf_dims);
+            }          
         }
         return shadow_value;
     }
@@ -97,7 +118,7 @@ public:
             sampler2d_specular_map->Get(m_varsInterpolated.texcoord.x(), m_varsInterpolated.texcoord.y(), shininess);  
             shininess *= 255.0f;
         }
-        else // default value
+        else
         {
             shininess = 32.0f;
         }

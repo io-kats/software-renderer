@@ -103,8 +103,8 @@ private:
 	};
 
 	s32 m_whichScene;
-
 	s32 m_numOfImages;
+	s32 m_numOfPcfDims;
 
 public:
 	App(const char* title_, int width_, int height_, int windowpos_x, int windowpos_y)
@@ -151,9 +151,7 @@ public:
 		const s32 count_cubes = 10;
 		m_cubes.Reserve(count_cubes);
 		for (s32 i = 0; i < count_cubes; ++i)
-		{
 			m_cubes.PushBack(MakeRandomCube());
-		}
 	}
 
 	void CubesSceneUpdateAndDraw()
@@ -163,9 +161,7 @@ public:
 		const s32 count_cubes = (s32)m_cubes.GetSize();
 
 		for (s32 i = 0; i < count_cubes; ++i)
-		{
 			m_cubes[i].transform.SetRotation(5.0f * current_time, m_cubes[i].rotation_axis);
-		}
 
 		m_renderer->SetViewport(GetWindowWidth(), GetWindowHeight());
 		m_renderer->Clear(0.2f, 0.2f, 0.3f);
@@ -306,8 +302,8 @@ public:
 
 		const ers::vec3 light_pos = m_monkeyInstance.transform.GetTranslation() 
 			+ ers::vec3(4.0f * cosf(current_time * 0.5f), ers::sin_norm(current_time * 0.5f, 1.0f, 5.0f, 6.0f), 4.0f * sinf(current_time * 0.5f));
-		const f32 zFar = 20.0f;
-		const ers::mat4 light_proj = ers::ortho(-10.0f, 10.0f, -10.0f, 10.0f, 0.01f, zFar);
+		const f32 zFar = 15.0f;
+		const ers::mat4 light_proj = ers::ortho(-10.0f, 10.0f, -10.0f, 10.0f, 1.0f, zFar);
 		const ers::mat4 light_view = ers::lookAt(light_pos, pos_texture_cube + ers::vec3(0.0f, 0.0f, -1.0f), ers::vec3(0.0f, 1.0f, 0.0f));
 
 		// Do a renderpass for shadows.
@@ -337,7 +333,7 @@ public:
 		m_blinnPhongShader.uniform_do_random_color = false;
 		m_blinnPhongShader.uniform_do_specific_color = false;
 		m_blinnPhongShader.uniform_do_point_light = false;
-		m_blinnPhongShader.uniform_color = ers::vec3(0.1f, 0.5f, 0.2f);
+		m_blinnPhongShader.uniform_pcf_dims = m_numOfPcfDims;
 		m_blinnPhongShader.uniform_light_dir = ers::normalize(pos_texture_cube - light_pos);
 		m_blinnPhongShader.uniform_view_pos = m_playerCamera->GetPosition();
 
@@ -397,6 +393,7 @@ public:
 
 		m_whichScene = Scene::HELLO_TRIANGLE;
 		m_numOfImages = 0;
+		m_numOfPcfDims = 1;
 
 		m_shadowmap = new Image(512, 512, Image::Format::GRAYSCALE, Image::Range::HDR);	
 
@@ -477,17 +474,34 @@ public:
 
 		if (KeyPressed(GLFW_KEY_UP))
 		{
-			for (s32 i = 0; i < 10; ++i)
+			if (m_whichScene == Scene::CUBES)
 			{
-				m_cubes.PushBack(MakeRandomCube());
+				for (s32 i = 0; i < 10; ++i)
+					m_cubes.PushBack(MakeRandomCube());
+				printf("Number of parallepipeds on screen: %d\n", (s32)m_cubes.GetSize());
 			}
-			printf("Number of parallepipeds on screen: %d\n", (s32)m_cubes.GetSize());
+			else if (m_whichScene == Scene::TEXTURE)
+			{	
+				m_numOfPcfDims += 2;
+				printf("Number of pcf samples: %d\n", m_numOfPcfDims * m_numOfPcfDims);
+			}
 		}
 
-		if (KeyPressed(GLFW_KEY_DOWN) && m_cubes.GetSize() > 0)
+		if (KeyPressed(GLFW_KEY_DOWN))
 		{
-			m_cubes.Resize(m_cubes.GetSize() - 10);
-			printf("Number of parallepipeds on screen: %d\n", (s32)m_cubes.GetSize());
+			if (m_whichScene == Scene::CUBES && m_cubes.GetSize() > 0)
+			{
+				m_cubes.Resize(m_cubes.GetSize() - 10);
+				printf("Number of parallepipeds on screen: %d\n", (s32)m_cubes.GetSize());
+			}
+			else if (m_whichScene == Scene::TEXTURE)
+			{	
+				m_numOfPcfDims -= 2;
+				if (m_numOfPcfDims < 1)
+					m_numOfPcfDims = 1;
+				else
+					printf("Number of pcf samples: %d\n", m_numOfPcfDims * m_numOfPcfDims);
+			}
 		}
 
 		if (MouseButtonHeld(GLFW_MOUSE_BUTTON_LEFT))

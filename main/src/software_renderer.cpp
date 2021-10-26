@@ -117,7 +117,7 @@ void Renderer::Clear(f32 r, f32 g, f32 b, f32 a)
         m_colorBuffer[position + 2] = (u8)(b * 255.999f);
         m_colorBuffer[position + 3] = (u8)(a * 255.999f);
     }
-    for (s32 i = 0; i < m_width * m_height; ++i) m_zBuffer[i] = FLT_MAX;
+    for (s32 i = 0; i < m_width * m_height; ++i) m_zBuffer[i] = 1.0f;
 }
 
 void Renderer::RenderTriangle(const void* in0, const void* in1, const void* in2)
@@ -298,11 +298,12 @@ void Renderer::rasterizeTriangle(s32 tri_idx)
             if (IsEnabled(WIREFRAME) && bar_correct.y() > 0.01f && bar_correct.z() > 0.01f && bar_correct.x() > 0.01f) continue;
           
             // Interpolate the z coordinate (in ndc-space). 
-            const f32 z_curr = bar.x() * p0.z() + bar.y() * p1.z() + bar.z() * p2.z();
+            f32 z_curr = bar.x() * p0.z() + bar.y() * p1.z() + bar.z() * p2.z();
+            z_curr = 0.5f * z_curr + 0.5f;
 
-            // Clip in the z-axis. We already clip against the near z-plane so we don't need z_curr < -1.0f, 
+            // Clip in the z-axis. We already clip against the near z-plane so we don't need z_curr < 0.0f, 
             // but leaving it in in case I mess around with clipping again.
-            if (z_curr < -1.0f || z_curr > 1.0f) continue; 
+            if (z_curr < 0.0f || z_curr > 1.0f) continue; 
 
             f32 buf_z = GetZValue(x, y);
             if (!IsEnabled(DEPTH_TEST) || (z_curr <= buf_z)) // early depth test. more negative z is "in front".

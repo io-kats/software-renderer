@@ -45,7 +45,7 @@ This project with the purpose of learning the algorithms behind 3D raster graphi
 
 - A base shader program class interface trying to mimic the structure of GLSL shader programs (vertex and fragment shaders), as well as some example shaders.
 
-- 3 very simple scenes, including Blinn-Phong shading, texture sampling and (very jaggy) shadow mapping with a directional light.
+- 3 very simple scenes, including Blinn-Phong shading, texture sampling and simple shadow mapping with a directional light.
 	
 
 ## Technologies
@@ -222,7 +222,7 @@ Controls for the scenes:
 	- Press WASD for movement.
 	- Press C to toggle between FPS and FLY modes for the camera.
 	- Hold the left mouse button to change the viewing direction.
-	- Press up and down arrow keys to increase or decrease the number of parallepipeds in the parallepipeds scene.
+	- Press up and down arrow keys to increase or decrease the number of parallepipeds in the parallepipeds scene and the number of samples for PCF of the shadow values in the monkey scene (gets slow quickly!).
 	- Press F to take a screenshot.
 	- Press V to toggle the wireframe on and off.
 	
