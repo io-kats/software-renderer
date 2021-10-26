@@ -53,18 +53,16 @@ public:
     f32 calculate_shadow_value(const ers::vec4& lightspace_fragpos)
     {
         f32 shadow_value = 0.0f;
-        if (sampler2d_shadow_map != nullptr)
+        ers::vec3 lightspace_ndc(lightspace_fragpos / lightspace_fragpos.w());
+        const f32 current_depth = 0.5f * lightspace_ndc.z() + 0.5f;
+        if (sampler2d_shadow_map != nullptr && current_depth <= 1.0f)
         {
-            ers::vec3 shadow_ndc(lightspace_fragpos / lightspace_fragpos.w());
-            shadow_ndc.x() = 0.5f * shadow_ndc.x() + 0.5f;
-            shadow_ndc.y() = 0.5f * shadow_ndc.y() + 0.5f;
-
-            const s32 dim = 1;
+            lightspace_ndc.x() = 0.5f * lightspace_ndc.x() + 0.5f;
+            lightspace_ndc.y() = 0.5f * lightspace_ndc.y() + 0.5f;
             if (uniform_pcf_dims == 1)
             {
                 f32 closest_depth;
-                sampler2d_shadow_map->Get(shadow_ndc.x(), shadow_ndc.y(), closest_depth);
-                f32 current_depth = 0.5f * shadow_ndc.z() + 0.5f;
+                sampler2d_shadow_map->Get(lightspace_ndc.x(), lightspace_ndc.y(), closest_depth);            
                 shadow_value = (current_depth - shadow_bias > closest_depth) ? 1.0f : 0.0f;
             }
             else // (slow) PCF
@@ -76,8 +74,7 @@ public:
                     for (s32 i = -half_dim; i <= half_dim; ++i)
                     {
                         f32 closest_depth;
-                        sampler2d_shadow_map->Get(shadow_ndc.x() + texel_size.x() * (f32)i, shadow_ndc.y() + texel_size.y() * (f32)j, closest_depth);
-                        f32 current_depth = 0.5f * shadow_ndc.z() + 0.5f;
+                        sampler2d_shadow_map->Get(lightspace_ndc.x() + texel_size.x() * (f32)i, lightspace_ndc.y() + texel_size.y() * (f32)j, closest_depth);                  
                         shadow_value += (current_depth - shadow_bias > closest_depth) ? 1.0f : 0.0f;
                     }
                 }
