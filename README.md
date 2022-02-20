@@ -62,11 +62,11 @@ This project with the purpose of learning the algorithms behind 3D raster graphi
 - For Windows you are going to need CMake (3.20.0-rc2 on my system) and:
 use Visual Studio Code with the [CMake Tools extention](https://marketplace.visualstudio.com/items?itemName=ms-vscode.cmake-tools&ssr=false#overview "cmake_tools") for desktop to build the project. 
 Tested with the Microsoft Visual Studio Community 2019 - Version 16.7.5 (x64) compiler.
-- If you'd like a a web version, install the Emscripten compiler toolchain, go to wherever you cloned the repo
-and run in the Emscripten command prompt:
+- .
+- If you'd like a a web version, install the Emscripten compiler toolchain, go to wherever you cloned the repo and Make .ure to change the directory path for the Emscripten SDK in [main/CMakeLists.txt](https://github.com/io-kats/software-renderer/blob/main/main/CMakeLists.txt "emscripten cmake directory") in line 9. Then run in the Emscripten command prompt:
 
 ```
-$ cd ../3d-gallery
+$ cd 3d-gallery
 $ mkdir build
 $ cd build 
 $ emcmake cmake .. 
