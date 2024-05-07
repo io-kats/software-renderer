@@ -62,32 +62,34 @@ This project with the purpose of learning the algorithms behind 3D raster graphi
 - For Windows you are going to need CMake (3.20.0-rc2 on my system) and:
 use Visual Studio Code with the [CMake Tools extention](https://marketplace.visualstudio.com/items?itemName=ms-vscode.cmake-tools&ssr=false#overview "cmake_tools") for desktop to build the project. 
 Tested with the Microsoft Visual Studio Community 2019 - Version 16.7.5 (x64) compiler.
-- .
-- If you'd like a a web version, install the Emscripten compiler toolchain, go to wherever you cloned the repo and Make .ure to change the directory path for the Emscripten SDK in [main/CMakeLists.txt](https://github.com/io-kats/software-renderer/blob/main/main/CMakeLists.txt "emscripten cmake directory") in line 9. Then run in the Emscripten command prompt:
+- If you'd like a a web version, install the Emscripten SDK with version `2.0.26` and make sure to change the directory path for the Emscripten SDK in [main/CMakeLists.txt](https://github.com/io-kats/software-renderer/blob/main/main/CMakeLists.txt "emscripten cmake directory") in line 9. Then run:
 
 ```
-$ cd 3d-gallery
+$ cd software-renderer
 $ mkdir build
 $ cd build 
 $ emcmake cmake .. 
-$ emmake make
+$ make
 ```
 
-To get a preview of what the app looks like also run in the same folder:
+To get a preview of what the app looks like, run:
 
 ```
+$ cd main
 $ python -m http.server
 ```
-and visit 
+and then visit: 
 ```
-localhost:8000/main/software_renderer.html
+localhost:8000/software_renderer.html
 ```
 
-in your browser. 
+in your browser.
+
+A working build can be found in `working_build`.
 
 However this has only been tested on Chrome Version 94.0.4606.81, so it might break on other versions or browsers.
 
-Please look at the [Emscripten tutorial](https://emscripten.org/docs/getting_started/Tutorial.html "emscripten_tutorial") for more information on how the toolchain works.
+Please look at the [Emscripten tutorial](https://emscripten.org/docs/getting_started/Tutorial.html "emscripten_tutorial") for more information on how the toolchain works. 
 
 ## Usage
 Use the ERS_SHADER_DEFINE_VARYINGS macro to define the names of your varyings and what fields they contain. Make sure it is made up of single precision floating point types, as that's how they will be interpreted. An example program used for "hello triangle":

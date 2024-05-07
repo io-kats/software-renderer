@@ -6,7 +6,7 @@ link_directories(${CMAKE_SOURCE_DIR}/main/libs/)
 include_directories(./includes/)
 include_directories(./glad/include/)
 
-include_directories(../../../SDKs/Emscripten_SDK/emsdk-master/upstream/emscripten/system/include/)
+include_directories(../../../sdk/emsdk/upstream/emscripten/system/include/)
 
 if (${CMAKE_SYSTEM_NAME} STREQUAL "Emscripten")
     option(BUILD_HTML "Building html..." ON)
